@@ -5,10 +5,15 @@ import librosa
 import soundfile as sf
 import torch
 import argparse
+import jsonify
 
 voices_dir = 'user_voices'
 if not os.path.exists(voices_dir):
     os.makedirs(voices_dir)
+output_dir = 'output_voices'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+ip = '54.91.170.78'
 
 wav_freq = 16000
 cuda = torch.cuda.is_available()
@@ -44,12 +49,17 @@ def clone_voice_api():
     speaker_wav = preprocess_audio(speaker_wav, freq=wav_freq)  # resample WAV
 
     # generate the TTS audio file 
-    output_wav = f'out_{char_name}.wav'
+    output_wav = os.path.join(output_dir, f'{char_name}.wav')
     tts.tts_to_file(text, speaker_wav=speaker_wav, language='en', file_path=output_wav)
+
     # return the TTS audio file as a binary response
-    with open(output_wav, 'rb') as f:
+    '''with open(output_wav, 'rb') as f:
         audio_data = f.read()
-    return audio_data, {'Content-Type': 'audio/wav'}
+    return audio_data, {'Content-Type': 'audio/wav'}'''
+
+    # Return a URL pointing to the audio file
+    audio_url = f'http://{ip}/{char_name}.wav'
+    return jsonify({'audio_url': audio_url})
 
 
 if __name__ == '__main__':
