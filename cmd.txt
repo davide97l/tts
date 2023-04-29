@@ -1,0 +1,12 @@
+inference_np_upload.py
+EN
+curl -X POST -F "speaker_wav=voices/tony_stark/weapon.wav" -F "text=Hello my friend" -F "character=tony_stark" http://34.228.167.209:5000/clone-voice
+CH
+curl -X POST -F "speaker_wav=voices/zh_man1/zh_man1.wav" -F "text=今天你吃了什么？" -F "character=chinese_voice" -F "language=zh" http://18.212.249.231:5000/clone-voice
+
+tmux
+tmux attach-session -t davide
+tmux new -s davide
+
+ip
+18.212.249.231

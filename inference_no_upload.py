@@ -1,11 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from TTS.api import TTS
 import os
 import librosa
 import soundfile as sf
 import torch
 import argparse
-import jsonify
 
 voices_dir = 'user_voices'
 if not os.path.exists(voices_dir):
@@ -17,7 +16,12 @@ ip = '54.91.170.78'
 
 wav_freq = 16000
 cuda = torch.cuda.is_available()
+
+# english model
 tts = TTS(model_name="tts_models/multilingual/multi-dataset/your_tts", progress_bar=False, gpu=cuda)
+# chinese model
+tts_zh = TTS('tts_models/zh-CN/baker/tacotron2-DDC-GST')
+
 print('Running inference on {}'.format('cpu' if not cuda else 'cuda'))
 
 app = Flask(__name__)
@@ -38,6 +42,11 @@ def clone_voice_api():
         return 'Error: No text string provided'
     if 'character' not in request.form:
         return 'Error: No character name provided'
+    if 'language' in request.form:
+        language = request.form['language']
+        print('Detected language: {}'.format(language))
+    else:
+        language = 'en'
 
     # get the text string from the request
     text = request.form['text']
@@ -50,7 +59,15 @@ def clone_voice_api():
 
     # generate the TTS audio file 
     output_wav = os.path.join(output_dir, f'{char_name}.wav')
-    tts.tts_to_file(text, speaker_wav=speaker_wav, language='en', file_path=output_wav)
+    if language in ['en']:
+        tts.tts_to_file(text, speaker_wav=speaker_wav, language=language, file_path=output_wav)
+    elif language in ['ch', 'zh']:
+        text += '。'  # sentences must end with stop punctuation, ex [。，？]
+        tts_zh.tts_with_vc_to_file(
+            text,
+            speaker_wav=speaker_wav,
+            file_path=output_wav
+        )
 
     # return the TTS audio file as a binary response
     '''with open(output_wav, 'rb') as f:
